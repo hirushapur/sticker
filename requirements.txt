@@ -1,0 +1,8 @@
+flask
+pandas
+openpyxl
+fpdf
+qrcode
+python-barcode
+pillow
+gunicorn

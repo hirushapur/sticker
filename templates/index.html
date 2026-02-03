@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FCT StickerGen Pro | AI Master</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { 
+            --accent: #6366f1; --ai-glow: #a855f7; --download-glow: #22c55e;
+            --bg: #0b0f1a; --card: #161e2d; --text: #f1f5f9; 
+            --muted: #94a3b8; --border: #2d3748;
+            --drop-bg: rgba(99, 102, 241, 0.05);
+        }
+        [data-theme="light"] {
+            --bg: #f1f5f9; --card: #ffffff; --text: #1e293b; 
+            --muted: #475569; --border: #cbd5e1;
+            --drop-bg: rgba(99, 102, 241, 0.03);
+        }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; padding: 40px 20px; transition: 0.4s; }
+        .glow-text { color: var(--accent); animation: text-glow 2s ease-in-out infinite alternate; }
+        @keyframes text-glow {
+            from { text-shadow: 0 0 5px rgba(99, 102, 241, 0.4), 0 0 10px rgba(99, 102, 241, 0.2); }
+            to { text-shadow: 0 0 15px rgba(168, 85, 247, 0.8), 0 0 25px rgba(168, 85, 247, 0.4); color: var(--ai-glow); }
+        }
+        .bento-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; max-width: 1200px; margin: auto; }
+        .bento-item { background: var(--card); border-radius: 28px; padding: 30px; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.2); position: relative; transition: transform 0.2s ease; }
+        .bento-item:hover { transform: translateY(-2px); }
+        .upload-zone { border: 2px dashed var(--border); border-radius: 20px; padding: 20px; text-align: center; background: var(--drop-bg); cursor: pointer; transition: 0.3s; position: relative; }
+        .upload-zone.dragover { border-color: var(--accent); background: rgba(99, 102, 241, 0.1); transform: scale(1.02); }
+        .upload-zone i { font-size: 2rem; color: var(--accent); margin-bottom: 10px; }
+        
+        /* FIXED: Forced visible text color for inputs and dropdowns */
+        .form-control, .form-select { 
+            background: rgba(100,100,100,0.1); 
+            border: 1px solid var(--border); 
+            color: var(--text) !important; 
+            border-radius: 14px; 
+            padding: 12px; 
+            transition: 0.3s; 
+        }
+        .form-control:focus, .form-select:focus { 
+            background: rgba(100,100,100,0.15); 
+            border-color: var(--accent); 
+            box-shadow: none; 
+            color: var(--text) !important; 
+        }
+        .form-select option { background-color: var(--card); color: var(--text); }
+
+        .loading-overlay { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(11, 15, 26, 0.8); backdrop-filter: blur(8px); z-index: 100; border-radius: 28px; flex-direction: column; justify-content: center; align-items: center; }
+        .spinner-border { width: 3rem; height: 3rem; color: var(--accent); }
+        .ai-selector { border: 2px solid var(--ai-glow); box-shadow: 0 0 15px rgba(168, 85, 247, 0.4); animation: pulse-ai 2s infinite; background: var(--ai-glow); color: #fff !important; font-weight: 800; }
+        .form-label { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--accent); letter-spacing: 0.12em; margin-bottom: 15px; display: block; }
+        .input-title { font-size: 0.7rem; font-weight: 600; color: var(--muted); display: block; margin-bottom: 6px; }
+        .btn-glow-download { background: linear-gradient(135deg, #22c55e, #10b981); color: white; border: none; border-radius: 16px; padding: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; box-shadow: 0 0 20px rgba(34, 197, 94, 0.4); transition: 0.3s; width: 100%; }
+        .btn-glow-download:hover { transform: scale(1.02); box-shadow: 0 0 30px rgba(34, 197, 94, 0.6); color: white; }
+        .btn-refresh-preview { background: transparent; border: 1px solid var(--accent); color: var(--text); border-radius: 14px; padding: 12px; width: 100%; font-weight: 600; transition: 0.3s; }
+        .btn-refresh-preview:hover { background: var(--accent); color: white !important; }
+        .switch { position: relative; display: inline-block; width: 48px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #475569; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--accent); }
+        input:checked + .slider:before { transform: translateX(24px); }
+        iframe { width: 100%; height: 550px; border-radius: 20px; border: 1px solid var(--border); background: #fff; margin-top: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .page-footer { grid-column: span 12; text-align: center; padding: 30px 0 10px 0; color: var(--muted); font-size: 0.85rem; }
+    </style>
+</head>
+<body data-theme="dark">
+<div class="bento-grid">
+    <div class="bento-item d-flex justify-content-between align-items-center" style="grid-column: span 12;">
+        <h2 class="m-0 fw-bold">FCT StickerGen <span class="glow-text">Pro</span></h2>
+        <div class="d-flex gap-3 align-items-center">
+            <span class="badge ai-selector py-2 px-3"><i class="fas fa-microchip me-2"></i>AI MASTER ACTIVE</span>
+            <button class="btn btn-sm btn-outline-secondary rounded-circle" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
+        </div>
+    </div>
+
+    <form id="mainForm" style="display: contents;">
+        <div class="bento-item" style="grid-column: span 4;">
+            <label class="form-label">1. Connection</label>
+            <span class="input-title">Upload Excel/CSV</span>
+            <div class="upload-zone mb-3" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <p class="small m-0" id="fileNameDisplay">Drag & Drop file or click to upload</p>
+                <input type="file" id="fileInput" name="file" hidden onchange="handleFileSelect(this.files)">
+            </div>
+            <span class="input-title">Sheet Selection</span>
+            <select id="sheet_selector" name="sheet_selector" class="form-select mb-3" onchange="onSheetSelected()"></select>
+            <span class="input-title">Line 1 (Auto Fit)</span>
+            <select id="col_selector_1" name="col_selector_1" class="form-select mb-3" onchange="runAction('preview')"></select>
+            <span class="input-title">Line 2 (Small)</span>
+            <select id="col_selector_2" name="col_selector_2" class="form-select mb-3" onchange="runAction('preview')">
+                <option value="None">-- None --</option>
+            </select>
+            <span class="input-title">Line 3 (Small)</span>
+            <select id="col_selector_3" name="col_selector_3" class="form-select" onchange="runAction('preview')">
+                <option value="None">-- None --</option>
+            </select>
+        </div>
+
+        <div class="bento-item" style="grid-column: span 4;">
+            <label class="form-label">2. Geometry & Style</label>
+            <span class="input-title">Generation Mode</span>
+            <select id="mode_selector" name="mode" class="form-select mb-3" onchange="updateDefaults(); runAction('preview')" style="border: 2px solid var(--accent);">
+                <option value="text" selected>Text Only</option>
+                <option value="qr">QR + Label</option>
+                <option value="barcode">Barcode + Label</option>
+            </select>
+            <div class="row g-2 mb-3">
+                <div class="col-6"><span class="input-title">Width (mm)</span><input type="number" name="width" class="form-control" value="90"></div>
+                <div class="col-6"><span class="input-title">Height (mm)</span><input type="number" name="height" class="form-control" value="19"></div>
+                <div class="col-6"><span class="input-title">Grid Cols</span><input type="number" name="cols" class="form-control" value="2"></div>
+                <div class="col-6"><span class="input-title">Base Font Size</span><input type="number" name="font_size" class="form-control" value="10"></div>
+            </div>
+        </div>
+
+        <div class="bento-item" style="grid-column: span 4;">
+            <label class="form-label">3. Export Options</label>
+            <span class="input-title">Branding Header</span>
+            <input type="text" id="headerText" name="header" class="form-control mb-3" value="Label Sheet">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <span class="input-title m-0">Show Index Numbers</span>
+                <label class="switch">
+                    <input type="checkbox" name="show_corners" checked onchange="runAction('preview')">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="d-flex gap-2 mb-3">
+                <button type="button" class="btn-refresh-preview" onclick="runAction('preview')">Refresh Review</button>
+                <button type="button" class="btn-refresh-preview" style="border-color: var(--muted); color: var(--muted); width: 60px;" onclick="resetForm()">
+                    <i class="fas fa-undo"></i>
+                </button>
+            </div>
+            <button type="button" class="btn-glow-download" onclick="runAction('download')">
+                <i class="fas fa-file-pdf me-2"></i>Final Download
+            </button>
+        </div>
+    </form>
+
+    <div class="bento-item" style="grid-column: span 12;">
+        <div id="loader" class="loading-overlay">
+            <div class="spinner-border mb-3"></div>
+            <p class="fw-bold">Processing Data...</p>
+        </div>
+        <div id="previewContainer">
+             <div class="text-center py-5">
+                <i class="fas fa-file-pdf fa-4x mb-3" style="color: var(--accent)"></i>
+                <p>Awaiting Data Stream...</p>
+            </div>
+        </div>
+    </div>
+    <footer class="page-footer">Designed by Hirusha | Powered by FCT StickerGen Pro</footer>
+</div>
+
+<script>
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    dropZone.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
+});
+['dragenter', 'dragover'].forEach(eventName => {
+    dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+});
+['dragleave', 'drop'].forEach(eventName => {
+    dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
+});
+dropZone.addEventListener('drop', e => { handleFileSelect(e.dataTransfer.files); });
+
+function handleFileSelect(files) {
+    if (files.length > 0) {
+        fileInput.files = files;
+        document.getElementById('fileNameDisplay').innerText = files[0].name;
+        onFileSelected();
+    }
+}
+
+function toggleTheme() {
+    const b = document.body;
+    const isDark = b.getAttribute('data-theme') === 'dark';
+    b.setAttribute('data-theme', isDark ? 'light' : 'dark');
+}
+
+function updateDefaults() {
+    const mode = document.getElementById('mode_selector').value;
+    const w = document.querySelector('input[name="width"]');
+    const h = document.querySelector('input[name="height"]');
+    if (mode === 'barcode') { w.value = 90; h.value = 30; }
+    else { w.value = 90; h.value = 19; }
+}
+
+function resetForm() {
+    document.getElementById('mainForm').reset();
+    document.getElementById('fileNameDisplay').innerText = "Drag & Drop file or click to upload";
+    document.getElementById('sheet_selector').innerHTML = '';
+    document.getElementById('col_selector_1').innerHTML = '';
+    document.getElementById('col_selector_2').innerHTML = '<option value="None">-- None --</option>';
+    document.getElementById('col_selector_3').innerHTML = '<option value="None">-- None --</option>';
+    document.getElementById('previewContainer').innerHTML = `<div class="text-center py-5"><i class="fas fa-file-pdf fa-4x mb-3" style="color: var(--accent)"></i><p>Awaiting Data Stream...</p></div>`;
+    updateDefaults();
+}
+
+async function onFileSelected() {
+    const fd = new FormData();
+    fd.append('file', fileInput.files[0]);
+    const res = await fetch('/get_sheets', { method: 'POST', body: fd });
+    const sheets = await res.json();
+    document.getElementById('sheet_selector').innerHTML = sheets.map(s => `<option value="${s}">${s}</option>`).join('');
+    onSheetSelected(); 
+}
+
+async function onSheetSelected() {
+    const sheet = document.getElementById('sheet_selector').value;
+    if(!fileInput.files[0]) return;
+    const fd = new FormData();
+    fd.append('file', fileInput.files[0]);
+    fd.append('sheet_name', sheet);
+    const res = await fetch('/get_columns', { method: 'POST', body: fd });
+    const cols = await res.json();
+    const options = cols.map(c => `<option value="${c}">${c}</option>`).join('');
+    document.getElementById('col_selector_1').innerHTML = options;
+    document.getElementById('col_selector_2').innerHTML = '<option value="None">-- None --</option>' + options;
+    document.getElementById('col_selector_3').innerHTML = '<option value="None">-- None --</option>' + options;
+    runAction('preview');
+}
+
+async function runAction(type) {
+    if(!fileInput.files[0] || !document.getElementById('col_selector_1').value) return;
+    const loader = document.getElementById('loader');
+    loader.style.display = 'flex';
+    const fd = new FormData(document.getElementById('mainForm'));
+    fd.append('file', fileInput.files[0]);
+    fd.append('action', type);
+
+    try {
+        const res = await fetch('/generate', { method: 'POST', body: fd });
+        if(type === 'download') {
+            const blob = await res.blob();
+            if (blob.size > 0) {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = (document.getElementById('headerText').value || "Labels") + ".pdf";
+                document.body.appendChild(a);
+                a.click();
+                // FIXED: Timeout prevents download handshake errors
+                setTimeout(() => { window.URL.revokeObjectURL(url); a.remove(); }, 200);
+            }
+        } else {
+            const data = await res.json();
+            if(data.pdf) {
+                document.getElementById('previewContainer').innerHTML = `<iframe src="data:application/pdf;base64,${data.pdf}"></iframe>`;
+            }
+        }
+    } catch (e) { console.error(e); } finally { loader.style.display = 'none'; }
+}
+</script>
+</body>
+</html>
